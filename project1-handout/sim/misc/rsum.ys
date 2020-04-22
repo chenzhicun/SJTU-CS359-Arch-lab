@@ -1,0 +1,40 @@
+# zhicun chen 518030910173
+
+.pos 0
+
+init:	irmovl Stack, %esp  	# Set up Stack pointer
+	    irmovl Stack, %ebp  	# Set up base pointer
+	    jmp Main		# Execute main program
+
+.align 4
+ele1:
+    .long 0x00a
+    .long ele2
+ele2:
+    .long 0x0b0
+    .long ele3
+ele3:
+    .long 0xc00
+    .long 0
+
+Main:
+    irmovl ele1,%edi
+    call recurve_sumlist
+    halt
+
+recurve_sumlist:
+    andl %edi,%edi
+    je end
+    mrmovl (%edi),%eax
+    pushl %eax
+    mrmovl 4(%edi),%edi
+    call recurve_sumlist
+    popl %ecx
+    addl %ecx,%eax
+    ret
+end:
+    xorl %eax,%eax
+    ret
+
+.pos 0x200
+Stack:

@@ -1,0 +1,40 @@
+                      | # zhicun chen 518030910173
+                      | 
+  0x000:              | .pos 0
+                      | 
+  0x000: 30f400020000 | init:	irmovl Stack, %esp  	# Set up Stack pointer
+  0x006: 30f500020000 | 	    irmovl Stack, %ebp  	# Set up base pointer
+  0x00c: 702c000000   | 	    jmp Main		# Execute main program
+                      | 
+  0x014:              | .align 4
+  0x014:              | src:
+  0x014: 0a000000     |     .long 0x00a
+  0x018: b0000000     |     .long 0x0b0
+  0x01c: 000c0000     |     .long 0xc00
+  0x020:              | des:
+  0x020: 11010000     |     .long 0x111
+  0x024: 22020000     |     .long 0x222
+  0x028: 33030000     |     .long 0x333
+                      | 
+  0x02c:              | Main:
+  0x02c: 30f014000000 |     irmovl src,%eax
+  0x032: 30f320000000 |     irmovl des,%ebx
+  0x038: 30f103000000 |     irmovl 3,%ecx
+  0x03e: 6377         |     xorl %edi,%edi     # as checksum
+  0x040:              | loop:
+  0x040: 6211         |     andl %ecx,%ecx
+  0x042: 736c000000   |     je end
+  0x047: 502000000000 |     mrmovl (%eax),%edx
+  0x04d: 402300000000 |     rmmovl %edx,(%ebx)
+  0x053: 6327         |     xorl %edx,%edi
+  0x055: 30f604000000 |     irmovl 4,%esi
+  0x05b: 6060         |     addl %esi,%eax
+  0x05d: 6063         |     addl %esi,%ebx
+  0x05f: 30f601000000 |     irmovl 1,%esi
+  0x065: 6161         |     subl %esi,%ecx
+  0x067: 7040000000   |     jmp loop
+  0x06c:              | end:
+  0x06c: 00           |     halt
+                      | 
+  0x200:              | .pos 0x200
+  0x200:              | Stack:
