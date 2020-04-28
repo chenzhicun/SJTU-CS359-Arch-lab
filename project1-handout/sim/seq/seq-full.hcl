@@ -1,3 +1,7 @@
+#Author: zhicun chen 518030910173
+#teammate: yifei wei 518030910159
+
+
 #/* $begin seq-all-hcl */
 ####################################################################
 #  HCL Description of Control for Single Cycle Y86 Processor SEQ   #
