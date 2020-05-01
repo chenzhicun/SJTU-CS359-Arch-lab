@@ -4,9 +4,22 @@
 # Return the number of positive ints (>0) contained in src.
 #
 # Include your name and ID here.
-#
+# Author: Yifei Wei	518030910159
+# Co-author: Zhicun Chen	518030910173
 # Describe how and why you modified the baseline code.
 #
+# Intuitions of enhancement:
+# 1. As is shown in chapter 5.8 in CS:APP, loop unrolling technique
+# would be useful for performance enhancement. Based on this
+# intuition, this program will handle the copy with sequently 16, 8
+# , 4, 2, 1 elements each time.
+#
+# 2. If we just read a value from source -> store it to destination, 
+# a bubble is required to avoid data hazard, which will greatly 
+# decline the performance. To solve this, we could handle 2 elements
+# each time following the order: read #1 -> read #2 -> write #1 ->
+# write #2. In this way the number of bubbles will be declined 
+# implicitly.
 ##################################################################
 # Do not modify this portion
 # Function prologue.
@@ -22,23 +35,251 @@ ncopy:	pushl %ebp		# Save old frame pointer
 ##################################################################
 # You can modify this portion
 	# Loop header
-	xorl %eax,%eax		# count = 0;
-	andl %edx,%edx		# len <= 0?
-	jle Done		# if so, goto Done:
+#	xorl %eax,%eax		# count = 0;
+#	andl %edx,%edx		# len <= 0?
+#	jle Done		# if so, goto Done:
 
-Loop:	mrmovl (%ebx), %esi	# read val from src...
-	rmmovl %esi, (%ecx)	# ...and store it to dst
-	andl %esi, %esi		# val <= 0?
-	jle Npos		# if so, goto Npos:
-	irmovl $1, %edi
-	addl %edi, %eax		# count++
-Npos:	irmovl $1, %edi
-	subl %edi, %edx		# len--
-	irmovl $4, %edi
-	addl %edi, %ebx		# src++
-	addl %edi, %ecx		# dst++
-	andl %edx,%edx		# len > 0?
-	jg Loop			# if so, goto Loop:
+#Loop:	mrmovl (%ebx), %esi	# read val from src...
+#	rmmovl %esi, (%ecx)	# ...and store it to dst
+#	andl %esi, %esi		# val <= 0?
+#	jle Npos		# if so, goto Npos:
+#	irmovl $1, %edi
+#	addl %edi, %eax		# count++
+#Npos:	irmovl $1, %edi
+#	subl %edi, %edx		# len--
+#	irmovl $4, %edi
+#	addl %edi, %ebx		# src++
+#	addl %edi, %ecx		# dst++
+#	andl %edx,%edx		# len > 0?
+#	jg Loop			# if so, goto Loop:
+
+# Initial and test if the remain is greater than 16
+T16:	irmovl $0, %eax
+	iaddl $-16, %edx
+	jl T8			# if edx < 16, test 8
+
+A0:	mrmovl (%ebx), %esi	# read #1
+	mrmovl 4(%ebx), %edi 	# read #2
+	rmmovl %esi, (%ecx)	# write #1
+	rmmovl %edi, 4(%ecx)	# write #2
+	andl %esi, %esi		# #1 > 0?
+	jle A1
+	iaddl $1, %eax		# count++
+
+A1:	andl %edi, %edi		# #2 > 0?
+	jle A2
+	iaddl $1, %eax
+
+A2:	mrmovl 8(%ebx), %esi    #from this on, each A(2i),
+	mrmovl 12(%ebx), %edi 	# A(2i+1) are similar to    
+        rmmovl %esi, 8(%ecx)    # A0, A1
+        rmmovl %edi, 12(%ecx)    
+        andl %esi, %esi        
+        jle A3
+        iaddl $1, %eax
+
+A3:     andl %edi, %edi        
+        jle A4
+        iaddl $1, %eax
+
+A4:     mrmovl 16(%ebx), %esi    
+        mrmovl 20(%ebx), %edi       
+        rmmovl %esi, 16(%ecx)    
+        rmmovl %edi, 20(%ecx)   
+        andl %esi, %esi
+        jle A5
+        iaddl $1, %eax
+
+A5:     andl %edi, %edi         
+        jle A6
+        iaddl $1, %eax
+
+A6:     mrmovl 24(%ebx), %esi   
+        mrmovl 28(%ebx), %edi                              
+        rmmovl %esi, 24(%ecx)   
+        rmmovl %edi, 28(%ecx)
+        andl %esi, %esi
+        jle A7
+        iaddl $1, %eax
+
+A7:     andl %edi, %edi
+        jle A8
+        iaddl $1, %eax
+
+A8:     mrmovl 32(%ebx), %esi
+        mrmovl 36(%ebx), %edi
+        rmmovl %esi, 32(%ecx)
+        rmmovl %edi, 36(%ecx)
+        andl %esi, %esi
+        jle A9
+        iaddl $1, %eax
+
+A9:     andl %edi, %edi
+        jle A10
+        iaddl $1, %eax
+
+A10:    mrmovl 40(%ebx), %esi
+        mrmovl 44(%ebx), %edi
+        rmmovl %esi, 40(%ecx)
+        rmmovl %edi, 44(%ecx)
+        andl %esi, %esi
+        jle A11
+        iaddl $1, %eax
+
+A11:    andl %edi, %edi
+        jle A12
+        iaddl $1, %eax
+
+A12:    mrmovl 48(%ebx), %esi
+        mrmovl 52(%ebx), %edi
+        rmmovl %esi, 48(%ecx)
+        rmmovl %edi, 52(%ecx)
+        andl %esi, %esi
+        jle A13
+        iaddl $1, %eax
+
+A13:    andl %edi, %edi
+        jle A14
+        iaddl $1, %eax
+
+A14:    mrmovl 56(%ebx), %esi
+        mrmovl 60(%ebx), %edi
+        rmmovl %esi, 56(%ecx)
+        rmmovl %edi, 60(%ecx)
+        andl %esi, %esi
+        jle A15
+        iaddl $1, %eax
+
+A15:    andl %edi, %edi
+        jle A16
+        iaddl $1, %eax
+
+A16:	iaddl $64, %ebx		# update source
+	iaddl $64, %ecx		# update destination
+	iaddl $-16, %edx	# if still remains more than 16
+	jge A0			# go back
+
+T8:	iaddl $8, %edx		# try with 8 elements
+	jl T4			# if less, jump to 4
+
+
+B0:     mrmovl (%ebx), %esi     # similar to A.
+        mrmovl 4(%ebx), %edi    
+        rmmovl %esi, (%ecx)     
+        rmmovl %edi, 4(%ecx)    
+        andl %esi, %esi         
+        jle B1
+        iaddl $1, %eax          
+
+B1:     andl %edi, %edi         
+        jle B2
+        iaddl $1, %eax
+
+B2:     mrmovl 8(%ebx), %esi    
+        mrmovl 12(%ebx), %edi       
+        rmmovl %esi, 8(%ecx)    
+        rmmovl %edi, 12(%ecx)
+        andl %esi, %esi
+        jle B3
+        iaddl $1, %eax
+
+B3:     andl %edi, %edi
+        jle B4
+        iaddl $1, %eax
+
+B4:     mrmovl 16(%ebx), %esi
+        mrmovl 20(%ebx), %edi
+        rmmovl %esi, 16(%ecx)
+        rmmovl %edi, 20(%ecx)
+        andl %esi, %esi
+        jle B5
+        iaddl $1, %eax
+
+B5:     andl %edi, %edi
+        jle B6
+        iaddl $1, %eax
+
+B6:     mrmovl 24(%ebx), %esi
+        mrmovl 28(%ebx), %edi
+        rmmovl %esi, 24(%ecx)
+        rmmovl %edi, 28(%ecx)
+        andl %esi, %esi
+        jle B7
+        iaddl $1, %eax
+
+B7:     andl %edi, %edi
+        jle B8
+        iaddl $1, %eax
+
+B8:	iaddl $32, %ebx
+	iaddl $32, %ecx
+	iaddl -8, %edx
+
+
+T4:	iaddl $4, %edx
+	jl T2
+
+C0:     mrmovl (%ebx), %esi     # similar to A.
+        mrmovl 4(%ebx), %edi    
+        rmmovl %esi, (%ecx)     
+        rmmovl %edi, 4(%ecx)    
+        andl %esi, %esi
+        jle C1
+        iaddl $1, %eax
+
+C1:     andl %edi, %edi
+        jle C2
+        iaddl $1, %eax
+
+C2:     mrmovl 8(%ebx), %esi    
+        mrmovl 12(%ebx), %edi                              
+        rmmovl %esi, 8(%ecx)    
+        rmmovl %edi, 12(%ecx)
+        andl %esi, %esi
+        jle C3
+        iaddl $1, %eax
+
+C3:     andl %edi, %edi
+        jle C4
+        iaddl $1, %eax
+
+C4:	iaddl $16, %ebx
+	iaddl $16, %ecx
+	iaddl -4, %edx
+
+
+T2:	iaddl $2, %edx
+	jl T1
+
+D0:     mrmovl (%ebx), %esi     # similar to A.
+        mrmovl 4(%ebx), %edi
+        rmmovl %esi, (%ecx)
+        rmmovl %edi, 4(%ecx)
+        andl %esi, %esi
+        jle D1
+        iaddl $1, %eax
+
+D1:     andl %edi, %edi
+        jle D2
+        iaddl $1, %eax
+
+D2:	iaddl $8, %ebx
+	iaddl $8, %ecx
+	iaddl -2, %edx
+
+
+T1:	iaddl $1, %edx
+	jl Done
+
+E0:	mrmovl (%ebx), %esi
+	rmmovl %esi, (%ecx)
+	andl %esi, %esi
+	jle Done
+	iaddl $1, %eax
+
+
+	
+	
 ##################################################################
 # Do not modify the following section of code
 # Function epilogue.

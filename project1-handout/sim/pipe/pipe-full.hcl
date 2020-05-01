@@ -2,6 +2,9 @@
 ####################################################################
 #    HCL Description of Control for Pipelined Y86 Processor        #
 #    Copyright (C) Randal E. Bryant, David R. O'Hallaron, 2010     #
+
+#    Author: Yifei Wei	518030910159
+#    Co-author: Zhicun Chen	518030910173
 ####################################################################
 
 ## Your task is to implement the iaddl and leave instructions
@@ -158,10 +161,10 @@ int f_ifun = [
 	1: imem_ifun;
 ];
 
-# Is instruction valid?
+# Is instruction valid? 	Not yet, so we add it
 bool instr_valid = f_icode in 
 	{ INOP, IHALT, IRRMOVL, IIRMOVL, IRMMOVL, IMRMOVL,
-	  IOPL, IJXX, ICALL, IRET, IPUSHL, IPOPL };
+	  IOPL, IJXX, ICALL, IRET, IPUSHL, IPOPL, IIADDL };
 
 # Determine status code for fetched instruction
 int f_stat = [
@@ -171,14 +174,14 @@ int f_stat = [
 	1 : SAOK;
 ];
 
-# Does fetched instruction require a regid byte?
+# Does fetched instruction require a regid byte?	Yes, so we add it
 bool need_regids =
 	f_icode in { IRRMOVL, IOPL, IPUSHL, IPOPL, 
-		     IIRMOVL, IRMMOVL, IMRMOVL };
+		     IIRMOVL, IRMMOVL, IMRMOVL, IIADDL };
 
-# Does fetched instruction require a constant word?
+# Does fetched instruction require a constant word?	Yes, so we add it
 bool need_valC =
-	f_icode in { IIRMOVL, IRMMOVL, IMRMOVL, IJXX, ICALL };
+	f_icode in { IIRMOVL, IRMMOVL, IMRMOVL, IJXX, ICALL, IIADDL };
 
 # Predict next value of PC
 int f_predPC = [
@@ -196,16 +199,16 @@ int d_srcA = [
 	1 : RNONE; # Don't need register
 ];
 
-## What register should be used as the B source?
+## What register should be used as the B source?	IIADDL uses second operand as register
 int d_srcB = [
-	D_icode in { IOPL, IRMMOVL, IMRMOVL  } : D_rB;
+	D_icode in { IOPL, IRMMOVL, IMRMOVL, IIADDL  } : D_rB;
 	D_icode in { IPUSHL, IPOPL, ICALL, IRET } : RESP;
 	1 : RNONE;  # Don't need register
 ];
 
 ## What register should be used as the E destination?
 int d_dstE = [
-	D_icode in { IRRMOVL, IIRMOVL, IOPL} : D_rB;
+	D_icode in { IRRMOVL, IIRMOVL, IOPL, IIADDL} : D_rB;
 	D_icode in { IPUSHL, IPOPL, ICALL, IRET } : RESP;
 	1 : RNONE;  # Don't write any register
 ];
@@ -239,19 +242,19 @@ int d_valB = [
 
 ################ Execute Stage #####################################
 
-## Select input A to ALU
+## Select input A to ALU	First operand of IIADDL is constant which is stored in E_valC
 int aluA = [
 	E_icode in { IRRMOVL, IOPL } : E_valA;
-	E_icode in { IIRMOVL, IRMMOVL, IMRMOVL } : E_valC;
+	E_icode in { IIRMOVL, IRMMOVL, IMRMOVL, IIADDL } : E_valC;
 	E_icode in { ICALL, IPUSHL } : -4;
 	E_icode in { IRET, IPOPL } : 4;
 	# Other instructions don't need ALU
 ];
 
-## Select input B to ALU
+## Select input B to ALU	Second operand of IIADDL is register which is stored in E_valB
 int aluB = [
 	E_icode in { IRMMOVL, IMRMOVL, IOPL, ICALL, 
-		     IPUSHL, IRET, IPOPL } : E_valB;
+		     IPUSHL, IRET, IPOPL, IIADDL } : E_valB;
 	E_icode in { IRRMOVL, IIRMOVL } : 0;
 	# Other instructions don't need ALU
 ];
@@ -262,8 +265,8 @@ int alufun = [
 	1 : ALUADD;
 ];
 
-## Should the condition codes be updated?
-bool set_cc = E_icode == IOPL &&
+## Should the condition codes be updated?	Yes, update with IIADDL
+bool set_cc = E_icode in {IOPL, IIADDL} &&
 	# State changes only during normal operation
 	!m_stat in { SADR, SINS, SHLT } && !W_stat in { SADR, SINS, SHLT };
 
