@@ -1,0 +1,47 @@
+                      | #Author: zhicun chen 518030910173
+                      | #teammate: yifei wei 518030910159
+                      | 
+                      | 
+  0x000:              | .pos 0
+                      | 
+  0x000: 30f400020000 | init:	irmovl Stack, %esp  	# Set up Stack pointer
+  0x006: 30f500020000 | 	    irmovl Stack, %ebp  	# Set up base pointer
+  0x00c: 702c000000   | 	    jmp Main		# Execute main program
+                      | 
+                      | # sample of linkeed list
+  0x014:              | .align 4
+  0x014:              | src:
+  0x014: 0a000000     |     .long 0x00a
+  0x018: b0000000     |     .long 0x0b0
+  0x01c: 000c0000     |     .long 0xc00
+  0x020:              | des:
+  0x020: 11010000     |     .long 0x111
+  0x024: 22020000     |     .long 0x222
+  0x028: 33030000     |     .long 0x333
+                      | 
+  0x02c:              | Main:
+  0x02c: 30f714000000 |     irmovl src,%edi
+  0x032: 30f320000000 |     irmovl des,%ebx
+  0x038: 30f103000000 |     irmovl 3,%ecx   # set length of list 
+  0x03e: 6300         |     xorl %eax,%eax     # initialize checksum to 0
+  0x040: 8046000000   |     call copy_block
+  0x045: 00           |     halt
+                      | 
+  0x046:              | copy_block:
+  0x046:              | loop:
+  0x046: 6211         |     andl %ecx,%ecx # test whether at the end of linked list
+  0x048: 7372000000   |     je end
+  0x04d: 502700000000 |     mrmovl (%edi),%edx
+  0x053: 402300000000 |     rmmovl %edx,(%ebx)
+  0x059: 6320         |     xorl %edx,%eax  # update checksum
+  0x05b: 30f604000000 |     irmovl 4,%esi
+  0x061: 6067         |     addl %esi,%edi # update address
+  0x063: 6063         |     addl %esi,%ebx  # update address
+  0x065: 30f601000000 |     irmovl 1,%esi
+  0x06b: 6161         |     subl %esi,%ecx
+  0x06d: 7046000000   |     jmp loop
+  0x072:              | end:
+  0x072: 90           |     ret
+                      | 
+  0x200:              | .pos 0x200
+  0x200:              | Stack:

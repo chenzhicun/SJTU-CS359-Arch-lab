@@ -8,6 +8,7 @@ init:	irmovl Stack, %esp  	# Set up Stack pointer
 	    irmovl Stack, %ebp  	# Set up base pointer
 	    jmp Main		# Execute main program
 
+# sample of linkeed list
 .align 4
 src:
     .long 0x00a
@@ -19,24 +20,28 @@ des:
     .long 0x333
 
 Main:
-    irmovl src,%eax
+    irmovl src,%edi
     irmovl des,%ebx
-    irmovl 3,%ecx
-    xorl %edi,%edi     # as checksum
+    irmovl 3,%ecx   # set length of list 
+    xorl %eax,%eax     # initialize checksum to 0
+    call copy_block
+    halt
+
+copy_block:
 loop:
-    andl %ecx,%ecx
+    andl %ecx,%ecx # test whether at the end of linked list
     je end
-    mrmovl (%eax),%edx
+    mrmovl (%edi),%edx
     rmmovl %edx,(%ebx)
-    xorl %edx,%edi
+    xorl %edx,%eax  # update checksum
     irmovl 4,%esi
-    addl %esi,%eax
-    addl %esi,%ebx
+    addl %esi,%edi # update address
+    addl %esi,%ebx  # update address
     irmovl 1,%esi
     subl %esi,%ecx
     jmp loop
 end:
-    halt
+    ret
 
 .pos 0x200
 Stack:
